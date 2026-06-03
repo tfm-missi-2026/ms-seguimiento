@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pe.unir.tfm.srp.seguimiento.repository.BitacoraMapper">
+
+    <sql id="selectAll">
+        SELECT id, usuario_id, fecha, hora_inicio, hora_fin, descripcion,
+               asignacion_id, actividad_id,
+               estado, fecha_creacion, usuario_creacion,
+               fecha_modificacion, usuario_modificacion,
+               fecha_eliminacion, usuario_eliminacion, motivo_eliminacion
+          FROM mss_bitacora
+    </sql>
+
+    <select id="buscarPorId" parameterType="java.util.UUID" resultType="pe.unir.tfm.srp.seguimiento.model.Bitacora">
+        <include refid="selectAll"/>
+        WHERE id = #{id} AND fecha_eliminacion IS NULL
+    </select>
+
+    <select id="listarPorUsuarioYFecha" resultType="pe.unir.tfm.srp.seguimiento.model.Bitacora">
+        <include refid="selectAll"/>
+        WHERE usuario_id = #{usuarioId} AND fecha = #{fecha}
+          AND fecha_eliminacion IS NULL AND estado = 1
+        ORDER BY hora_inicio
+    </select>
+
+    <select id="listarPorUsuarioYRango" resultType="pe.unir.tfm.srp.seguimiento.model.Bitacora">
+        <include refid="selectAll"/>
+        WHERE usuario_id = #{usuarioId} AND fecha BETWEEN #{desde} AND #{hasta}
+          AND fecha_eliminacion IS NULL AND estado = 1
+        ORDER BY fecha, hora_inicio
+    </select>
+
+    <insert id="insertar" parameterType="pe.unir.tfm.srp.seguimiento.model.Bitacora">
+        INSERT INTO mss_bitacora (id, usuario_id, fecha, hora_inicio, hora_fin, descripcion,
+                                  asignacion_id, actividad_id,
+                                  estado, fecha_creacion, usuario_creacion)
+        VALUES (#{id}, #{usuarioId}, #{fecha}, #{horaInicio}, #{horaFin}, #{descripcion},
+                #{asignacionId}, #{actividadId},
+                #{estado}, #{fechaCreacion}, #{usuarioCreacion})
+    </insert>
+
+    <update id="actualizar" parameterType="pe.unir.tfm.srp.seguimiento.model.Bitacora">
+        UPDATE mss_bitacora
+           SET fecha = #{fecha},
+               hora_inicio = #{horaInicio},
+               hora_fin = #{horaFin},
+               descripcion = #{descripcion},
+               asignacion_id = #{asignacionId},
+               actividad_id = #{actividadId},
+               estado = #{estado},
+               fecha_modificacion = #{fechaModificacion},
+               usuario_modificacion = #{usuarioModificacion}
+         WHERE id = #{id} AND fecha_eliminacion IS NULL
+    </update>
+
+    <update id="eliminarLogico">
+        UPDATE mss_bitacora
+           SET fecha_eliminacion = NOW(),
+               usuario_eliminacion = #{usuarioEliminacion},
+               motivo_eliminacion = #{motivoEliminacion},
+               estado = 0
+         WHERE id = #{id} AND fecha_eliminacion IS NULL
+    </update>
+
+</mapper>

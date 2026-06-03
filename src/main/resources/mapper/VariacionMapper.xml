@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pe.unir.tfm.srp.seguimiento.repository.VariacionMapper">
+
+    <sql id="selectAll">
+        SELECT id, tarea_id, tipo_variacion_id, descripcion, justificacion,
+               valor_anterior, valor_nuevo, fecha_deteccion, reportada_por,
+               situacion_id, observacion_resolucion, fecha_resolucion, resuelto_por,
+               estado, fecha_creacion, usuario_creacion,
+               fecha_modificacion, usuario_modificacion,
+               fecha_eliminacion, usuario_eliminacion, motivo_eliminacion
+          FROM mss_variacion
+    </sql>
+
+    <select id="buscarPorId" parameterType="java.util.UUID" resultType="pe.unir.tfm.srp.seguimiento.model.Variacion">
+        <include refid="selectAll"/>
+        WHERE id = #{id} AND fecha_eliminacion IS NULL
+    </select>
+
+    <select id="listarActivas" resultType="pe.unir.tfm.srp.seguimiento.model.Variacion">
+        <include refid="selectAll"/>
+        WHERE fecha_eliminacion IS NULL AND estado = 1
+        ORDER BY fecha_deteccion DESC
+    </select>
+
+    <select id="listarPorTarea" parameterType="java.util.UUID" resultType="pe.unir.tfm.srp.seguimiento.model.Variacion">
+        <include refid="selectAll"/>
+        WHERE tarea_id = #{tareaId} AND fecha_eliminacion IS NULL AND estado = 1
+        ORDER BY fecha_deteccion DESC
+    </select>
+
+    <insert id="insertar" parameterType="pe.unir.tfm.srp.seguimiento.model.Variacion">
+        INSERT INTO mss_variacion (id, tarea_id, tipo_variacion_id, descripcion, justificacion,
+                                   valor_anterior, valor_nuevo, fecha_deteccion, reportada_por,
+                                   situacion_id, observacion_resolucion, fecha_resolucion, resuelto_por,
+                                   estado, fecha_creacion, usuario_creacion)
+        VALUES (#{id}, #{tareaId}, #{tipoVariacionId}, #{descripcion}, #{justificacion},
+                #{valorAnterior}, #{valorNuevo}, #{fechaDeteccion}, #{reportadaPor},
+                #{situacionId}, #{observacionResolucion}, #{fechaResolucion}, #{resueltoPor},
+                #{estado}, #{fechaCreacion}, #{usuarioCreacion})
+    </insert>
+
+    <update id="actualizar" parameterType="pe.unir.tfm.srp.seguimiento.model.Variacion">
+        UPDATE mss_variacion
+           SET tarea_id = #{tareaId},
+               tipo_variacion_id = #{tipoVariacionId},
+               descripcion = #{descripcion},
+               justificacion = #{justificacion},
+               valor_anterior = #{valorAnterior},
+               valor_nuevo = #{valorNuevo},
+               fecha_deteccion = #{fechaDeteccion},
+               reportada_por = #{reportadaPor},
+               situacion_id = #{situacionId},
+               observacion_resolucion = #{observacionResolucion},
+               fecha_resolucion = #{fechaResolucion},
+               resuelto_por = #{resueltoPor},
+               estado = #{estado},
+               fecha_modificacion = #{fechaModificacion},
+               usuario_modificacion = #{usuarioModificacion}
+         WHERE id = #{id} AND fecha_eliminacion IS NULL
+    </update>
+
+    <update id="eliminarLogico">
+        UPDATE mss_variacion
+           SET fecha_eliminacion = NOW(),
+               usuario_eliminacion = #{usuarioEliminacion},
+               motivo_eliminacion = #{motivoEliminacion},
+               estado = 0
+         WHERE id = #{id} AND fecha_eliminacion IS NULL
+    </update>
+
+</mapper>

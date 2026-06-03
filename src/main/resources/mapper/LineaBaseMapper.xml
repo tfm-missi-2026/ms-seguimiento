@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pe.unir.tfm.srp.seguimiento.repository.LineaBaseMapper">
+
+    <select id="buscarPorId" parameterType="java.util.UUID" resultType="pe.unir.tfm.srp.seguimiento.model.LineaBase">
+        SELECT id, proyecto_id, version, descripcion, fecha_congelacion, congelada_por,
+               estado, fecha_creacion, usuario_creacion,
+               fecha_modificacion, usuario_modificacion,
+               fecha_eliminacion, usuario_eliminacion, motivo_eliminacion
+          FROM mss_linea_base
+         WHERE id = #{id} AND fecha_eliminacion IS NULL
+    </select>
+
+    <select id="listarPorProyecto" parameterType="java.util.UUID" resultType="pe.unir.tfm.srp.seguimiento.model.LineaBase">
+        SELECT id, proyecto_id, version, descripcion, fecha_congelacion, congelada_por,
+               estado, fecha_creacion, usuario_creacion,
+               fecha_modificacion, usuario_modificacion,
+               fecha_eliminacion, usuario_eliminacion, motivo_eliminacion
+          FROM mss_linea_base
+         WHERE proyecto_id = #{proyectoId} AND fecha_eliminacion IS NULL AND estado = 1
+         ORDER BY version DESC
+    </select>
+
+    <select id="obtenerSiguienteVersion" parameterType="java.util.UUID" resultType="java.lang.Short">
+        SELECT COALESCE(MAX(version), 0) + 1 FROM mss_linea_base
+         WHERE proyecto_id = #{proyectoId}
+    </select>
+
+    <insert id="insertarCabecera" parameterType="pe.unir.tfm.srp.seguimiento.model.LineaBase">
+        INSERT INTO mss_linea_base (id, proyecto_id, version, descripcion, fecha_congelacion, congelada_por,
+                                    estado, fecha_creacion, usuario_creacion)
+        VALUES (#{id}, #{proyectoId}, #{version}, #{descripcion}, #{fechaCongelacion}, #{congeladaPor},
+                #{estado}, #{fechaCreacion}, #{usuarioCreacion})
+    </insert>
+
+    <insert id="insertarTarea" parameterType="pe.unir.tfm.srp.seguimiento.model.LbTarea">
+        INSERT INTO mss_lb_tarea (id, linea_base_id, tarea_id, nombre, descripcion,
+                                  fecha_inicio_planificada, fecha_fin_planificada, horas_estimadas,
+                                  estado, fecha_creacion, usuario_creacion)
+        VALUES (#{id}, #{lineaBaseId}, #{tareaId}, #{nombre}, #{descripcion},
+                #{fechaInicioPlanificada}, #{fechaFinPlanificada}, #{horasEstimadas},
+                #{estado}, #{fechaCreacion}, #{usuarioCreacion})
+    </insert>
+
+    <insert id="insertarAsignacion" parameterType="pe.unir.tfm.srp.seguimiento.model.LbAsignacion">
+        INSERT INTO mss_lb_asignacion (id, linea_base_id, asignacion_id, tarea_id, usuario_id,
+                                       estado, fecha_creacion, usuario_creacion)
+        VALUES (#{id}, #{lineaBaseId}, #{asignacionId}, #{tareaId}, #{usuarioId},
+                #{estado}, #{fechaCreacion}, #{usuarioCreacion})
+    </insert>
+
+    <select id="listarTareasPorLineaBase" parameterType="java.util.UUID" resultType="pe.unir.tfm.srp.seguimiento.model.LbTarea">
+        SELECT id, linea_base_id, tarea_id, nombre, descripcion,
+               fecha_inicio_planificada, fecha_fin_planificada, horas_estimadas,
+               estado, fecha_creacion, usuario_creacion,
+               fecha_modificacion, usuario_modificacion,
+               fecha_eliminacion, usuario_eliminacion, motivo_eliminacion
+          FROM mss_lb_tarea
+         WHERE linea_base_id = #{lineaBaseId} AND fecha_eliminacion IS NULL
+    </select>
+
+    <select id="listarAsignacionesPorLineaBase" parameterType="java.util.UUID" resultType="pe.unir.tfm.srp.seguimiento.model.LbAsignacion">
+        SELECT id, linea_base_id, asignacion_id, tarea_id, usuario_id,
+               estado, fecha_creacion, usuario_creacion,
+               fecha_modificacion, usuario_modificacion,
+               fecha_eliminacion, usuario_eliminacion, motivo_eliminacion
+          FROM mss_lb_asignacion
+         WHERE linea_base_id = #{lineaBaseId} AND fecha_eliminacion IS NULL
+    </select>
+
+</mapper>

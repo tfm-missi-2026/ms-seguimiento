@@ -1,0 +1,64 @@
+# =============================================================
+# Orquestacion STANDALONE de ms-seguimiento
+# Levanta SOLO este microservicio + su PostgreSQL, sin Eureka.
+# Util para desarrollar/probar el servicio aislado.
+#
+#   cp .env.example .env
+#   docker compose up -d --build
+#   # API:    http://localhost:8083
+#   # Health: http://localhost:8083/actuator/health
+#
+# Para el stack completo (Eureka + gateway + los otros ms) usa el repo `orquestacion`.
+# Si levantas varios servicios standalone a la vez, cambia APP_PORT y DB_PORT en .env
+# para evitar choques de puerto en el host.
+# =============================================================
+name: ms-seguimiento
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: mss-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-spsrt_seguimiento}
+      POSTGRES_USER: ${DB_USER:-spsrt_seguimiento_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-spsrt_seguimiento_pwd}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - mss-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-spsrt_seguimiento_user} -d ${DB_NAME:-spsrt_seguimiento}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - mss-net
+
+  ms-seguimiento:
+    build:
+      context: .
+    container_name: mss-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-spsrt_seguimiento}
+      DB_USER: ${DB_USER:-spsrt_seguimiento_user}
+      DB_PASSWORD: ${DB_PASSWORD:-spsrt_seguimiento_pwd}
+      JWT_SECRET: ${JWT_SECRET:-cambiar-esta-clave-en-produccion-minimo-32-bytes-aleatorios}
+      EUREKA_CLIENT_ENABLED: "false"
+    ports:
+      - "${APP_PORT:-8083}:8083"
+    networks:
+      - mss-net
+
+volumes:
+  mss-postgres-data:
+    name: mss-postgres-data
+
+networks:
+  mss-net:
+    name: mss-net
+    driver: bridge

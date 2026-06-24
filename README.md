@@ -46,6 +46,29 @@ solos con las variables del `.env`; Flyway aplica las migraciones al arrancar.
 > puedes levantar también `ms-administracion` para obtener el token, o probar
 > `/actuator/health` sin autenticación.
 
+## Desarrollo local en IntelliJ (perfil `dev`)
+
+Para iterar rápido sin rebuildear la imagen Docker, corré **solo este servicio** desde
+IntelliJ (▶ Run de la clase `@SpringBootApplication`) y dejá su PostgreSQL en Docker:
+
+```bash
+cd ../../orquestacion && docker compose up -d postgres
+```
+
+El perfil **`dev`** desactiva la exigencia de JWT e inyecta un usuario simulado (admin del
+seed, con todos los roles), así probás los endpoints **sin token**. Activalo de una de estas
+formas:
+
+- **Run Configuration** → campo *Active profiles*: `dev`, **o**
+- VM options: `-Dspring.profiles.active=dev`, **o**
+- Variable de entorno: `SPRING_PROFILES_ACTIVE=dev`
+
+Con el perfil activo, pegale directo: `GET http://localhost:8083/api/asignaciones` (sin header
+`Authorization`) → responde `200`.
+
+> ⚠️ El perfil `dev` **solo** aplica corriendo así. En Docker / `orquestacion` / producción
+> (sin perfil) la seguridad JWT sigue intacta.
+
 ## Dentro del stack completo
 
 Para correrlo junto a Eureka, el gateway y los demás microservicios, usa el repo

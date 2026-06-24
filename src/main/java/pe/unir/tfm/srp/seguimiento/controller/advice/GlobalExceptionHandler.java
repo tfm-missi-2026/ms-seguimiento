@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
@@ -54,6 +55,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConflictoNegocioException.class)
     public ProblemDetail manejarConflicto(ConflictoNegocioException ex, HttpServletRequest req) {
         return crearProblema(HttpStatus.CONFLICT, "CONFLICTO_NEGOCIO", ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail manejarIntegridad(DataIntegrityViolationException ex, HttpServletRequest req) {
+        log.warn("Violacion de integridad en {}: {}", req.getRequestURI(), ex.getMostSpecificCause().getMessage());
+        return crearProblema(HttpStatus.CONFLICT, "CONFLICTO_INTEGRIDAD",
+                "Ya existe un registro con esos datos unicos o se viola una restriccion de integridad", req);
     }
 
     @ExceptionHandler(Exception.class)

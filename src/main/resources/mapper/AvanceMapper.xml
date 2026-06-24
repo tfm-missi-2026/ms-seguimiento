@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pe.unir.tfm.srp.seguimiento.repository.AvanceMapper">
+
+    <!-- RF-09: por cada tarea de la linea base, horas estimadas (plan congelado) vs horas
+         registradas (ejecucion real en bitacora, via la asignacion de la tarea). -->
+    <select id="avancePorLineaBase" resultType="pe.unir.tfm.srp.seguimiento.model.AvanceTareaAgregado">
+        SELECT lt.tarea_id                       AS tarea_id,
+               lt.nombre                          AS nombre,
+               lt.horas_estimadas                 AS horas_estimadas,
+               COALESCE(reg.horas_registradas, 0) AS horas_registradas
+          FROM mss_lb_tarea lt
+          LEFT JOIN (
+               SELECT a.tarea_id,
+                      ROUND(SUM(EXTRACT(EPOCH FROM (b.hora_fin - b.hora_inicio)) / 3600.0)::numeric, 2) AS horas_registradas
+                 FROM mss_bitacora b
+                 JOIN mss_asignacion a ON a.id = b.asignacion_id AND a.fecha_eliminacion IS NULL
+                WHERE b.estado = 1 AND b.fecha_eliminacion IS NULL
+                GROUP BY a.tarea_id
+          ) reg ON reg.tarea_id = lt.tarea_id
+         WHERE lt.linea_base_id = #{lineaBaseId} AND lt.fecha_eliminacion IS NULL
+         ORDER BY lt.nombre
+    </select>
+
+</mapper>

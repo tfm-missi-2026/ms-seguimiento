@@ -1,5 +1,7 @@
 package pe.unir.tfm.srp.seguimiento.repository;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,6 +22,10 @@ public interface AsignacionMapper {
     List<Asignacion> listarPorTarea(@Param("tareaId") UUID tareaId);
 
     int contar(@Param("tareaId") UUID tareaId, @Param("usuarioId") UUID usuarioId);
+
+    BigDecimal sumarHorasPlanificadasEnPeriodo(@Param("usuarioId") UUID usuarioId,
+                                               @Param("desde") LocalDate desde,
+                                               @Param("hasta") LocalDate hasta);
 
     void insertar(Asignacion asignacion);
 

@@ -4,6 +4,7 @@
 
     <sql id="selectAll">
         SELECT id, tarea_id, usuario_id,
+               horas_planificadas, fecha_inicio_planificada, fecha_fin_planificada,
                estado, fecha_creacion, usuario_creacion,
                fecha_modificacion, usuario_modificacion,
                fecha_eliminacion, usuario_eliminacion, motivo_eliminacion
@@ -37,9 +38,23 @@
          WHERE tarea_id = #{tareaId} AND usuario_id = #{usuarioId} AND fecha_eliminacion IS NULL
     </select>
 
+    <!-- Carga ya comprometida del recurso cuyo periodo planificado solapa [desde, hasta] (RF-06) -->
+    <select id="sumarHorasPlanificadasEnPeriodo" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(horas_planificadas), 0)
+          FROM mss_asignacion
+         WHERE usuario_id = #{usuarioId} AND estado = 1 AND fecha_eliminacion IS NULL
+           AND horas_planificadas IS NOT NULL
+           AND (fecha_inicio_planificada IS NULL OR fecha_inicio_planificada &lt;= #{hasta})
+           AND (fecha_fin_planificada IS NULL OR fecha_fin_planificada &gt;= #{desde})
+    </select>
+
     <insert id="insertar" parameterType="pe.unir.tfm.srp.seguimiento.model.Asignacion">
-        INSERT INTO mss_asignacion (id, tarea_id, usuario_id, estado, fecha_creacion, usuario_creacion)
-        VALUES (#{id}, #{tareaId}, #{usuarioId}, #{estado}, #{fechaCreacion}, #{usuarioCreacion})
+        INSERT INTO mss_asignacion (id, tarea_id, usuario_id,
+                                    horas_planificadas, fecha_inicio_planificada, fecha_fin_planificada,
+                                    estado, fecha_creacion, usuario_creacion)
+        VALUES (#{id}, #{tareaId}, #{usuarioId},
+                #{horasPlanificadas}, #{fechaInicioPlanificada}, #{fechaFinPlanificada},
+                #{estado}, #{fechaCreacion}, #{usuarioCreacion})
     </insert>
 
     <update id="actualizar" parameterType="pe.unir.tfm.srp.seguimiento.model.Asignacion">

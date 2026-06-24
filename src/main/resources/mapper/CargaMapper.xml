@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pe.unir.tfm.srp.seguimiento.repository.CargaMapper">
+
+    <!-- Lista de tareas para el filtro por proyecto (RF-07). El frontend resuelve
+         proyecto -> tareaIds contra ms-proyectos y los pasa aqui. -->
+    <sql id="inTareas">
+        IN
+        <foreach item="t" collection="tareaIds" open="(" separator="," close=")">#{t}</foreach>
+    </sql>
+
+    <select id="agregarCargaEquipo" resultType="pe.unir.tfm.srp.seguimiento.model.CargaAgregado">
+        SELECT a.usuario_id                          AS usuario_id,
+               COALESCE(SUM(a.horas_planificadas), 0) AS horas_planificadas,
+               COALESCE(reg.horas_registradas, 0)     AS horas_registradas,
+               COUNT(*)                               AS numero_tareas_activas
+          FROM mss_asignacion a
+          LEFT JOIN (
+               SELECT b.usuario_id,
+                      ROUND(SUM(EXTRACT(EPOCH FROM (b.hora_fin - b.hora_inicio)) / 3600.0)::numeric, 2) AS horas_registradas
+                 FROM mss_bitacora b
+                 <if test="tareaIds != null and tareaIds.size() > 0">
+                 JOIN mss_asignacion ab ON ab.id = b.asignacion_id
+                      AND ab.tarea_id <include refid="inTareas"/>
+                      AND ab.fecha_eliminacion IS NULL
+                 </if>
+                WHERE b.fecha BETWEEN #{desde} AND #{hasta}
+                  AND b.estado = 1 AND b.fecha_eliminacion IS NULL
+                GROUP BY b.usuario_id
+          ) reg ON reg.usuario_id = a.usuario_id
+         WHERE a.estado = 1 AND a.fecha_eliminacion IS NULL
+           AND (a.fecha_inicio_planificada IS NULL OR a.fecha_inicio_planificada &lt;= #{hasta})
+           AND (a.fecha_fin_planificada IS NULL OR a.fecha_fin_planificada &gt;= #{desde})
+           <if test="tareaIds != null and tareaIds.size() > 0">
+           AND a.tarea_id <include refid="inTareas"/>
+           </if>
+         GROUP BY a.usuario_id, reg.horas_registradas
+         ORDER BY a.usuario_id
+    </select>
+
+    <select id="agregarCargaPorUsuario" resultType="pe.unir.tfm.srp.seguimiento.model.CargaAgregado">
+        SELECT
+            COALESCE((SELECT SUM(a.horas_planificadas)
+                        FROM mss_asignacion a
+                       WHERE a.usuario_id = #{usuarioId} AND a.estado = 1 AND a.fecha_eliminacion IS NULL
+                         AND (a.fecha_inicio_planificada IS NULL OR a.fecha_inicio_planificada &lt;= #{hasta})
+                         AND (a.fecha_fin_planificada IS NULL OR a.fecha_fin_planificada &gt;= #{desde})
+                         <if test="tareaIds != null and tareaIds.size() > 0">
+                         AND a.tarea_id <include refid="inTareas"/>
+                         </if>), 0)
+                AS horas_planificadas,
+            COALESCE((SELECT ROUND(SUM(EXTRACT(EPOCH FROM (b.hora_fin - b.hora_inicio)) / 3600.0)::numeric, 2)
+                        FROM mss_bitacora b
+                        <if test="tareaIds != null and tareaIds.size() > 0">
+                        JOIN mss_asignacion ab ON ab.id = b.asignacion_id
+                             AND ab.tarea_id <include refid="inTareas"/>
+                             AND ab.fecha_eliminacion IS NULL
+                        </if>
+                       WHERE b.usuario_id = #{usuarioId} AND b.fecha BETWEEN #{desde} AND #{hasta}
+                         AND b.estado = 1 AND b.fecha_eliminacion IS NULL), 0)
+                AS horas_registradas,
+            (SELECT COUNT(*)
+                       FROM mss_asignacion a2
+                      WHERE a2.usuario_id = #{usuarioId} AND a2.estado = 1 AND a2.fecha_eliminacion IS NULL
+                        AND (a2.fecha_inicio_planificada IS NULL OR a2.fecha_inicio_planificada &lt;= #{hasta})
+                        AND (a2.fecha_fin_planificada IS NULL OR a2.fecha_fin_planificada &gt;= #{desde})
+                        <if test="tareaIds != null and tareaIds.size() > 0">
+                        AND a2.tarea_id <include refid="inTareas"/>
+                        </if>)
+                AS numero_tareas_activas
+    </select>
+
+</mapper>

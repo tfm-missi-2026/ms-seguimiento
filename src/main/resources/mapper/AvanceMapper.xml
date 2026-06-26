@@ -14,11 +14,11 @@
                SELECT a.tarea_id,
                       ROUND(SUM(EXTRACT(EPOCH FROM (b.hora_fin - b.hora_inicio)) / 3600.0)::numeric, 2) AS horas_registradas
                  FROM mss_bitacora b
-                 JOIN mss_asignacion a ON a.id = b.asignacion_id AND a.fecha_eliminacion IS NULL
-                WHERE b.estado = 1 AND b.fecha_eliminacion IS NULL
+                 JOIN mss_asignacion a ON a.id = b.asignacion_id AND a.estado = 1
+                WHERE b.estado = 1
                 GROUP BY a.tarea_id
           ) reg ON reg.tarea_id = lt.tarea_id
-         WHERE lt.linea_base_id = #{lineaBaseId} AND lt.fecha_eliminacion IS NULL
+         WHERE lt.linea_base_id = #{lineaBaseId} AND lt.estado = 1
          ORDER BY lt.nombre
     </select>
 

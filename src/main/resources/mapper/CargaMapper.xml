@@ -22,13 +22,13 @@
                  <if test="tareaIds != null and tareaIds.size() > 0">
                  JOIN mss_asignacion ab ON ab.id = b.asignacion_id
                       AND ab.tarea_id <include refid="inTareas"/>
-                      AND ab.fecha_eliminacion IS NULL
+                      AND ab.estado = 1
                  </if>
                 WHERE b.fecha BETWEEN #{desde} AND #{hasta}
-                  AND b.estado = 1 AND b.fecha_eliminacion IS NULL
+                  AND b.estado = 1
                 GROUP BY b.usuario_id
           ) reg ON reg.usuario_id = a.usuario_id
-         WHERE a.estado = 1 AND a.fecha_eliminacion IS NULL
+         WHERE a.estado = 1
            AND (a.fecha_inicio_planificada IS NULL OR a.fecha_inicio_planificada &lt;= #{hasta})
            AND (a.fecha_fin_planificada IS NULL OR a.fecha_fin_planificada &gt;= #{desde})
            <if test="tareaIds != null and tareaIds.size() > 0">
@@ -42,7 +42,7 @@
         SELECT
             COALESCE((SELECT SUM(a.horas_planificadas)
                         FROM mss_asignacion a
-                       WHERE a.usuario_id = #{usuarioId} AND a.estado = 1 AND a.fecha_eliminacion IS NULL
+                       WHERE a.usuario_id = #{usuarioId} AND a.estado = 1
                          AND (a.fecha_inicio_planificada IS NULL OR a.fecha_inicio_planificada &lt;= #{hasta})
                          AND (a.fecha_fin_planificada IS NULL OR a.fecha_fin_planificada &gt;= #{desde})
                          <if test="tareaIds != null and tareaIds.size() > 0">
@@ -54,14 +54,14 @@
                         <if test="tareaIds != null and tareaIds.size() > 0">
                         JOIN mss_asignacion ab ON ab.id = b.asignacion_id
                              AND ab.tarea_id <include refid="inTareas"/>
-                             AND ab.fecha_eliminacion IS NULL
+                             AND ab.estado = 1
                         </if>
                        WHERE b.usuario_id = #{usuarioId} AND b.fecha BETWEEN #{desde} AND #{hasta}
-                         AND b.estado = 1 AND b.fecha_eliminacion IS NULL), 0)
+                         AND b.estado = 1), 0)
                 AS horas_registradas,
             (SELECT COUNT(*)
                        FROM mss_asignacion a2
-                      WHERE a2.usuario_id = #{usuarioId} AND a2.estado = 1 AND a2.fecha_eliminacion IS NULL
+                      WHERE a2.usuario_id = #{usuarioId} AND a2.estado = 1
                         AND (a2.fecha_inicio_planificada IS NULL OR a2.fecha_inicio_planificada &lt;= #{hasta})
                         AND (a2.fecha_fin_planificada IS NULL OR a2.fecha_fin_planificada &gt;= #{desde})
                         <if test="tareaIds != null and tareaIds.size() > 0">

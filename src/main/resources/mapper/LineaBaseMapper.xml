@@ -8,7 +8,7 @@
                fecha_modificacion, usuario_modificacion,
                fecha_eliminacion, usuario_eliminacion, motivo_eliminacion
           FROM mss_linea_base
-         WHERE id = #{id} AND fecha_eliminacion IS NULL
+         WHERE id = #{id} AND estado = 1
     </select>
 
     <select id="listarPorProyecto" parameterType="java.util.UUID" resultType="pe.unir.tfm.srp.seguimiento.model.LineaBase">
@@ -17,7 +17,7 @@
                fecha_modificacion, usuario_modificacion,
                fecha_eliminacion, usuario_eliminacion, motivo_eliminacion
           FROM mss_linea_base
-         WHERE proyecto_id = #{proyectoId} AND fecha_eliminacion IS NULL AND estado = 1
+         WHERE proyecto_id = #{proyectoId} AND estado = 1
          ORDER BY version DESC
     </select>
 
@@ -30,7 +30,7 @@
         INSERT INTO mss_linea_base (id, proyecto_id, version, descripcion, fecha_congelacion, congelada_por,
                                     estado, fecha_creacion, usuario_creacion)
         VALUES (#{id}, #{proyectoId}, #{version}, #{descripcion}, #{fechaCongelacion}, #{congeladaPor},
-                #{estado}, #{fechaCreacion}, #{usuarioCreacion})
+                1, NOW(), #{usuarioCreacion})
     </insert>
 
     <insert id="insertarTarea" parameterType="pe.unir.tfm.srp.seguimiento.model.LbTarea">
@@ -39,14 +39,14 @@
                                   estado, fecha_creacion, usuario_creacion)
         VALUES (#{id}, #{lineaBaseId}, #{tareaId}, #{nombre}, #{descripcion},
                 #{fechaInicioPlanificada}, #{fechaFinPlanificada}, #{horasEstimadas},
-                #{estado}, #{fechaCreacion}, #{usuarioCreacion})
+                1, NOW(), #{usuarioCreacion})
     </insert>
 
     <insert id="insertarAsignacion" parameterType="pe.unir.tfm.srp.seguimiento.model.LbAsignacion">
         INSERT INTO mss_lb_asignacion (id, linea_base_id, asignacion_id, tarea_id, usuario_id,
                                        estado, fecha_creacion, usuario_creacion)
         VALUES (#{id}, #{lineaBaseId}, #{asignacionId}, #{tareaId}, #{usuarioId},
-                #{estado}, #{fechaCreacion}, #{usuarioCreacion})
+                1, NOW(), #{usuarioCreacion})
     </insert>
 
     <select id="listarTareasPorLineaBase" parameterType="java.util.UUID" resultType="pe.unir.tfm.srp.seguimiento.model.LbTarea">
@@ -56,7 +56,7 @@
                fecha_modificacion, usuario_modificacion,
                fecha_eliminacion, usuario_eliminacion, motivo_eliminacion
           FROM mss_lb_tarea
-         WHERE linea_base_id = #{lineaBaseId} AND fecha_eliminacion IS NULL
+         WHERE linea_base_id = #{lineaBaseId} AND estado = 1
     </select>
 
     <select id="listarAsignacionesPorLineaBase" parameterType="java.util.UUID" resultType="pe.unir.tfm.srp.seguimiento.model.LbAsignacion">
@@ -65,7 +65,7 @@
                fecha_modificacion, usuario_modificacion,
                fecha_eliminacion, usuario_eliminacion, motivo_eliminacion
           FROM mss_lb_asignacion
-         WHERE linea_base_id = #{lineaBaseId} AND fecha_eliminacion IS NULL
+         WHERE linea_base_id = #{lineaBaseId} AND estado = 1
     </select>
 
 </mapper>

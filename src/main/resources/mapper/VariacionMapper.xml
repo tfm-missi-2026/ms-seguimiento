@@ -14,18 +14,18 @@
 
     <select id="buscarPorId" parameterType="java.util.UUID" resultType="pe.unir.tfm.srp.seguimiento.model.Variacion">
         <include refid="selectAll"/>
-        WHERE id = #{id} AND fecha_eliminacion IS NULL
+        WHERE id = #{id} AND estado = 1
     </select>
 
     <select id="listarActivas" resultType="pe.unir.tfm.srp.seguimiento.model.Variacion">
         <include refid="selectAll"/>
-        WHERE fecha_eliminacion IS NULL AND estado = 1
+        WHERE estado = 1
         ORDER BY fecha_deteccion DESC
     </select>
 
     <select id="listarPorTarea" parameterType="java.util.UUID" resultType="pe.unir.tfm.srp.seguimiento.model.Variacion">
         <include refid="selectAll"/>
-        WHERE tarea_id = #{tareaId} AND fecha_eliminacion IS NULL AND estado = 1
+        WHERE tarea_id = #{tareaId} AND estado = 1
         ORDER BY fecha_deteccion DESC
     </select>
 
@@ -37,7 +37,7 @@
         VALUES (#{id}, #{tareaId}, #{tipoVariacionId}, #{descripcion}, #{justificacion},
                 #{valorAnterior}, #{valorNuevo}, #{fechaDeteccion}, #{reportadaPor},
                 #{situacionId}, #{observacionResolucion}, #{fechaResolucion}, #{resueltoPor},
-                #{estado}, #{fechaCreacion}, #{usuarioCreacion})
+                1, NOW(), #{usuarioCreacion})
     </insert>
 
     <update id="actualizar" parameterType="pe.unir.tfm.srp.seguimiento.model.Variacion">
@@ -54,10 +54,9 @@
                observacion_resolucion = #{observacionResolucion},
                fecha_resolucion = #{fechaResolucion},
                resuelto_por = #{resueltoPor},
-               estado = #{estado},
-               fecha_modificacion = #{fechaModificacion},
+               fecha_modificacion = NOW(),
                usuario_modificacion = #{usuarioModificacion}
-         WHERE id = #{id} AND fecha_eliminacion IS NULL
+         WHERE id = #{id} AND estado = 1
     </update>
 
     <update id="eliminarLogico">
@@ -66,7 +65,7 @@
                usuario_eliminacion = #{usuarioEliminacion},
                motivo_eliminacion = #{motivoEliminacion},
                estado = 0
-         WHERE id = #{id} AND fecha_eliminacion IS NULL
+         WHERE id = #{id} AND estado = 1
     </update>
 
 </mapper>

@@ -13,36 +13,36 @@
 
     <select id="buscarPorId" parameterType="java.util.UUID" resultType="pe.unir.tfm.srp.seguimiento.model.Asignacion">
         <include refid="selectAll"/>
-        WHERE id = #{id} AND fecha_eliminacion IS NULL
+        WHERE id = #{id} AND estado = 1
     </select>
 
     <select id="listarActivas" resultType="pe.unir.tfm.srp.seguimiento.model.Asignacion">
         <include refid="selectAll"/>
-        WHERE fecha_eliminacion IS NULL AND estado = 1
+        WHERE estado = 1
         ORDER BY fecha_creacion DESC
     </select>
 
     <select id="listarPorUsuario" parameterType="java.util.UUID" resultType="pe.unir.tfm.srp.seguimiento.model.Asignacion">
         <include refid="selectAll"/>
-        WHERE usuario_id = #{usuarioId} AND fecha_eliminacion IS NULL AND estado = 1
+        WHERE usuario_id = #{usuarioId} AND estado = 1
         ORDER BY fecha_creacion DESC
     </select>
 
     <select id="listarPorTarea" parameterType="java.util.UUID" resultType="pe.unir.tfm.srp.seguimiento.model.Asignacion">
         <include refid="selectAll"/>
-        WHERE tarea_id = #{tareaId} AND fecha_eliminacion IS NULL AND estado = 1
+        WHERE tarea_id = #{tareaId} AND estado = 1
     </select>
 
     <select id="contar" resultType="int">
         SELECT COUNT(*) FROM mss_asignacion
-         WHERE tarea_id = #{tareaId} AND usuario_id = #{usuarioId} AND fecha_eliminacion IS NULL
+         WHERE tarea_id = #{tareaId} AND usuario_id = #{usuarioId} AND estado = 1
     </select>
 
     <!-- Carga ya comprometida del recurso cuyo periodo planificado solapa [desde, hasta] (RF-06) -->
     <select id="sumarHorasPlanificadasEnPeriodo" resultType="java.math.BigDecimal">
         SELECT COALESCE(SUM(horas_planificadas), 0)
           FROM mss_asignacion
-         WHERE usuario_id = #{usuarioId} AND estado = 1 AND fecha_eliminacion IS NULL
+         WHERE usuario_id = #{usuarioId} AND estado = 1
            AND horas_planificadas IS NOT NULL
            AND (fecha_inicio_planificada IS NULL OR fecha_inicio_planificada &lt;= #{hasta})
            AND (fecha_fin_planificada IS NULL OR fecha_fin_planificada &gt;= #{desde})
@@ -54,17 +54,16 @@
                                     estado, fecha_creacion, usuario_creacion)
         VALUES (#{id}, #{tareaId}, #{usuarioId},
                 #{horasPlanificadas}, #{fechaInicioPlanificada}, #{fechaFinPlanificada},
-                #{estado}, #{fechaCreacion}, #{usuarioCreacion})
+                1, NOW(), #{usuarioCreacion})
     </insert>
 
     <update id="actualizar" parameterType="pe.unir.tfm.srp.seguimiento.model.Asignacion">
         UPDATE mss_asignacion
            SET tarea_id = #{tareaId},
                usuario_id = #{usuarioId},
-               estado = #{estado},
-               fecha_modificacion = #{fechaModificacion},
+               fecha_modificacion = NOW(),
                usuario_modificacion = #{usuarioModificacion}
-         WHERE id = #{id} AND fecha_eliminacion IS NULL
+         WHERE id = #{id} AND estado = 1
     </update>
 
     <update id="eliminarLogico">
@@ -73,7 +72,7 @@
                usuario_eliminacion = #{usuarioEliminacion},
                motivo_eliminacion = #{motivoEliminacion},
                estado = 0
-         WHERE id = #{id} AND fecha_eliminacion IS NULL
+         WHERE id = #{id} AND estado = 1
     </update>
 
 </mapper>

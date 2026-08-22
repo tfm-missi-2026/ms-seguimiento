@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 import pe.unir.tfm.srp.seguimiento.dto.response.BitacoraResponse;
 import pe.unir.tfm.srp.seguimiento.model.Bitacora;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface BitacoraConversor {
     BitacoraResponse aBitacoraResponse(Bitacora bitacora);
     List<BitacoraResponse> aBitacoraResponseList(List<Bitacora> bitacoras);

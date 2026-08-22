@@ -12,7 +12,6 @@ import org.apache.ibatis.plugin.Intercepts;
 import org.apache.ibatis.plugin.Invocation;
 import org.apache.ibatis.plugin.Plugin;
 import org.apache.ibatis.plugin.Signature;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
@@ -28,8 +27,8 @@ public class AuditoriaInterceptor implements Interceptor {
 
     private final CurrentUserResolver currentUserResolver;
 
-    @Autowired
-    public AuditoriaInterceptor(@Lazy CurrentUserResolver currentUserResolver) {
+    @Lazy
+    public AuditoriaInterceptor(CurrentUserResolver currentUserResolver) {
         this.currentUserResolver = currentUserResolver;
     }
 
@@ -65,7 +64,7 @@ public class AuditoriaInterceptor implements Interceptor {
             if (campo.get(obj) == null) {
                 campo.set(obj, valor);
             }
-        } catch (Exception ex) {
+        } catch (IllegalAccessException | IllegalArgumentException ex) {
             log.debug("No se pudo poblar auditoria '{}' en {}", propiedad, obj.getClass().getSimpleName());
         }
     }

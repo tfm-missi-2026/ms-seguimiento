@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,7 +54,7 @@ public class CargaController {
 
     private void validarAccesoAUsuario(UUID usuarioId, Authentication authentication) {
         boolean privilegiado = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
+                .map(authority -> authority.getAuthority())
                 .anyMatch(ROLES_PRIVILEGIADOS::contains);
         if (!privilegiado && !usuarioId.equals(currentUserResolver.obtenerUsuarioActualId())) {
             throw new AccessDeniedException("No tiene permiso para consultar la carga de otro recurso");

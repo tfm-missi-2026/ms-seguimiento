@@ -9,13 +9,13 @@ El stack completo se orquesta desde el repo
 
 ## Datos del servicio
 
-| | |
-|---|---|
-| Puerto | **8083** |
-| Base de datos | `spsrt_seguimiento` (PostgreSQL 16) |
-| Prefijo de tablas | `mss_` |
-| Paquete base | `pe.unir.tfm.srp.seguimiento` |
-| Stack | Java 21 · Spring Boot 3.5.14 · MyBatis · Flyway · Eureka client |
+|                   |                                                                 |
+| ----------------- | --------------------------------------------------------------- |
+| Puerto            | **8083**                                                        |
+| Base de datos     | `spsrt_seguimiento` (PostgreSQL 16)                             |
+| Prefijo de tablas | `mss_`                                                          |
+| Paquete base      | `pe.unir.tfm.srp.seguimiento`                                   |
+| Stack             | Java 25 · Spring Boot 3.5.14 · MyBatis · Flyway · Eureka client |
 
 ## URLs útiles (con el stack completo levantado)
 
@@ -26,7 +26,7 @@ El stack completo se orquesta desde el repo
 ## Requisitos
 
 - **Docker Desktop 24+** con docker compose v2 (forma recomendada), **o**
-- Java 21 + Maven 3.9+ para compilar/ejecutar fuera de contenedor.
+- Java 25 + Maven 3.9+ para compilar/ejecutar fuera de contenedor.
 
 ## Levantar standalone (solo este servicio + su PostgreSQL)
 
@@ -38,8 +38,8 @@ docker compose up -d --build
 Arranca el microservicio + un PostgreSQL propio (sin Eureka). La BD y el usuario se crean
 solos con las variables del `.env`; Flyway aplica las migraciones al arrancar.
 
-- API:     http://localhost:8083
-- Health:  http://localhost:8083/actuator/health
+- API: http://localhost:8083
+- Health: http://localhost:8083/actuator/health
 - Swagger: http://localhost:8083/swagger-ui.html
 
 > Los endpoints de negocio exigen un **JWT** emitido por `ms-administracion`. En standalone
@@ -59,7 +59,7 @@ El perfil **`dev`** desactiva la exigencia de JWT e inyecta un usuario simulado 
 seed, con todos los roles), así probás los endpoints **sin token**. Activalo de una de estas
 formas:
 
-- **Run Configuration** → campo *Active profiles*: `dev`, **o**
+- **Run Configuration** → campo _Active profiles_: `dev`, **o**
 - VM options: `-Dspring.profiles.active=dev`, **o**
 - Variable de entorno: `SPRING_PROFILES_ACTIVE=dev`
 
@@ -77,13 +77,13 @@ Para correrlo junto a Eureka, el gateway y los demás microservicios, usa el rep
 
 ## Endpoints principales
 
-| Recurso | Ruta |
-|---|---|
+| Recurso      | Ruta                |
+| ------------ | ------------------- |
 | Asignaciones | `/api/asignaciones` |
-| Actividades | `/api/actividades` |
-| Bitácora | `/api/bitacora` |
-| Línea base | `/api/linea-base` |
-| Variaciones | `/api/variaciones` |
+| Actividades  | `/api/actividades`  |
+| Bitácora     | `/api/bitacora`     |
+| Línea base   | `/api/linea-base`   |
+| Variaciones  | `/api/variaciones`  |
 
 ## Migraciones
 

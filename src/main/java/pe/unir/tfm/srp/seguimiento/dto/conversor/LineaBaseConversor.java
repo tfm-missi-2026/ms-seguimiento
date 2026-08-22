@@ -12,7 +12,7 @@ import pe.unir.tfm.srp.seguimiento.model.LbAsignacion;
 import pe.unir.tfm.srp.seguimiento.model.LbTarea;
 import pe.unir.tfm.srp.seguimiento.model.LineaBase;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface LineaBaseConversor {
 
     LbTareaResponse aLbTareaResponse(LbTarea tarea);

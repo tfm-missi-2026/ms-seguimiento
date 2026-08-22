@@ -33,11 +33,11 @@ public class AvanceService {
                 .toList();
 
         BigDecimal estimadasTotal = tareas.stream()
-                .map(AvanceTareaResponse::horasEstimadas)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(tarea -> tarea.horasEstimadas())
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         BigDecimal registradasTotal = tareas.stream()
-                .map(AvanceTareaResponse::horasRegistradas)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(tarea -> tarea.horasRegistradas())
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
 
         return new AvanceProyectoResponse(
                 proyectoId,

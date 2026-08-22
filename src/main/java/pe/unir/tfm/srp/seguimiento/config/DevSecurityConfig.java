@@ -19,6 +19,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import org.jspecify.annotations.NonNull;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,7 +50,8 @@ public class DevSecurityConfig {
     private OncePerRequestFilter devAuthFilter() {
         return new OncePerRequestFilter() {
             @Override
-            protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+            protected void doFilterInternal(@NonNull HttpServletRequest req, @NonNull HttpServletResponse res,
+                                           @NonNull FilterChain chain)
                     throws ServletException, IOException {
                 Jwt jwt = Jwt.withTokenValue("dev-token")
                         .header("alg", "none")

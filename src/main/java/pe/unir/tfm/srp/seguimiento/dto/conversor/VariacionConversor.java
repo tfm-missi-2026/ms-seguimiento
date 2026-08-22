@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 import pe.unir.tfm.srp.seguimiento.dto.response.VariacionResponse;
 import pe.unir.tfm.srp.seguimiento.model.Variacion;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface VariacionConversor {
     VariacionResponse aVariacionResponse(Variacion variacion);
     List<VariacionResponse> aVariacionResponseList(List<Variacion> variaciones);

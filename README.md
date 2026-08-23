@@ -15,7 +15,7 @@ El stack completo se orquesta desde el repo
 | Base de datos     | `spsrt_seguimiento` (PostgreSQL 16)                             |
 | Prefijo de tablas | `mss_`                                                          |
 | Paquete base      | `pe.unir.tfm.srp.seguimiento`                                   |
-| Stack             | Java 25 · Spring Boot 3.5.14 · MyBatis · Flyway · Eureka client |
+| Stack             | Java 17 · Spring Boot 4.1.1 · Spring Cloud 2025.1.2 · MyBatis · Flyway · Eureka client |
 
 ## URLs útiles (con el stack completo levantado)
 
@@ -26,7 +26,8 @@ El stack completo se orquesta desde el repo
 ## Requisitos
 
 - **Docker Desktop 24+** con docker compose v2 (forma recomendada), **o**
-- Java 25 + Maven 3.9+ para compilar/ejecutar fuera de contenedor.
+- **JDK 17 o superior** para compilar/ejecutar fuera de contenedor. Maven no hace falta:
+  el servicio trae su wrapper (`mvnw` / `mvnw.cmd`).
 
 ## Levantar standalone (solo este servicio + su PostgreSQL)
 

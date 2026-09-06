@@ -13,6 +13,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,26 @@ public class GlobalExceptionHandler {
         problem.setInstance(URI.create(req.getRequestURI()));
         problem.setProperty("timestamp", Instant.now().toString());
         problem.setProperty("errores", errores);
+        return problem;
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail manejarCuerpoIlegible(HttpMessageNotReadableException ex, HttpServletRequest req) {
+        return crearProblema(HttpStatus.BAD_REQUEST, "VALIDACION_FALLIDA",
+                "El cuerpo de la peticion no tiene un formato valido", req);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ProblemDetail manejarTipoInvalido(MethodArgumentTypeMismatchException ex, HttpServletRequest req) {
+        Map<String, String> error = new HashMap<>();
+        error.put("campo", ex.getName());
+        error.put("mensaje", "El valor recibido no tiene el formato esperado");
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Datos invalidos");
+        problem.setTitle("VALIDACION_FALLIDA");
+        problem.setInstance(URI.create(req.getRequestURI()));
+        problem.setProperty("timestamp", Instant.now().toString());
+        problem.setProperty("errores", List.of(error));
         return problem;
     }
 

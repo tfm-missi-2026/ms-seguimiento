@@ -54,7 +54,6 @@ public class VariacionService {
                 .valorNuevo(request.valorNuevo())
                 .fechaDeteccion(request.fechaDeteccion())
                 .reportadaPor(request.reportadaPor())
-                .situacionId(request.situacionId())
                 .build();
         variacionMapper.insertar(nueva);
         return variacionConversor.aVariacionResponse(nueva);

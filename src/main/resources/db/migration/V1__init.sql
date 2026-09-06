@@ -32,7 +32,7 @@ CREATE TABLE mss_asignacion (
     motivo_eliminacion   VARCHAR(500)
 );
 
-CREATE UNIQUE INDEX uk_mss_asign_tarea_usuario ON mss_asignacion(tarea_id, usuario_id);
+CREATE UNIQUE INDEX uk_mss_asign_tarea_usuario ON mss_asignacion(tarea_id, usuario_id) WHERE estado = 1;
 CREATE INDEX idx_mss_asign_tarea ON mss_asignacion(tarea_id);
 CREATE INDEX idx_mss_asign_usuario ON mss_asignacion(usuario_id);
 
@@ -121,7 +121,7 @@ CREATE TABLE mss_bitacora (
     )
 );
 
-CREATE UNIQUE INDEX uk_mss_bit_usuario_fecha_hini ON mss_bitacora(usuario_id, fecha, hora_inicio);
+CREATE UNIQUE INDEX uk_mss_bit_usuario_fecha_hini ON mss_bitacora(usuario_id, fecha, hora_inicio) WHERE estado = 1;
 CREATE INDEX idx_mss_bit_usuario ON mss_bitacora(usuario_id);
 CREATE INDEX idx_mss_bit_fecha ON mss_bitacora(fecha);
 CREATE INDEX idx_mss_bit_asignacion ON mss_bitacora(asignacion_id);
@@ -158,7 +158,7 @@ CREATE TABLE mss_variacion (
     valor_nuevo            VARCHAR(500),
     fecha_deteccion        DATE         NOT NULL,
     reportada_por          UUID         NOT NULL,
-    situacion_id           UUID         NOT NULL,
+    situacion_id           UUID,
     observacion_resolucion VARCHAR(500),
     fecha_resolucion       TIMESTAMP,
     resuelto_por           UUID,
@@ -185,7 +185,7 @@ COMMENT ON COLUMN mss_variacion.valor_anterior IS 'Estado del atributo afectado 
 COMMENT ON COLUMN mss_variacion.valor_nuevo IS 'Estado del atributo afectado despues del cambio';
 COMMENT ON COLUMN mss_variacion.fecha_deteccion IS 'Fecha en que se identifico la necesidad de la variacion';
 COMMENT ON COLUMN mss_variacion.reportada_por IS 'UUID del actor que reporto la variacion (cross-BD a msa_usuario)';
-COMMENT ON COLUMN mss_variacion.situacion_id IS 'FK a la situacion en msa_catalogo grupo=SITUACION_VARIACION (Pendiente, Aprobada, Rechazada) (cross-BD)';
+COMMENT ON COLUMN mss_variacion.situacion_id IS 'FK a la situacion en msa_catalogo grupo=SITUACION_VARIACION (Aprobada, Rechazada) (cross-BD). NULL mientras la variacion esta pendiente de resolucion';
 COMMENT ON COLUMN mss_variacion.observacion_resolucion IS 'Comentario de quien aprueba/rechaza (motivo si rechaza)';
 COMMENT ON COLUMN mss_variacion.fecha_resolucion IS 'Fecha y hora en que se aprobo o rechazo';
 COMMENT ON COLUMN mss_variacion.resuelto_por IS 'UUID del Gestor que decidio (cross-BD a msa_usuario)';

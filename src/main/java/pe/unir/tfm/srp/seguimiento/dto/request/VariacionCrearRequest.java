@@ -15,6 +15,5 @@ public record VariacionCrearRequest(
     @Size(max = 500) String valorAnterior,
     @Size(max = 500) String valorNuevo,
     @NotNull LocalDate fechaDeteccion,
-    @NotNull UUID reportadaPor,
-    @NotNull UUID situacionId
+    @NotNull UUID reportadaPor
 ) {}

@@ -28,8 +28,10 @@ public class LineaBaseService {
     private final LineaBaseConversor lineaBaseConversor;
     private final CurrentUserResolver currentUserResolver;
 
-    public List<LineaBase> listarPorProyecto(UUID proyectoId) {
-        return lineaBaseMapper.listarPorProyecto(proyectoId);
+    public List<LineaBaseResponse> listarPorProyecto(UUID proyectoId) {
+        return lineaBaseMapper.listarPorProyecto(proyectoId).stream()
+                .map(cabecera -> buscarPorId(cabecera.getId()))
+                .toList();
     }
 
     public LineaBaseResponse buscarPorId(UUID id) {

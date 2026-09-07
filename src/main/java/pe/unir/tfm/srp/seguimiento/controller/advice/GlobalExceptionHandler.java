@@ -83,7 +83,7 @@ public class GlobalExceptionHandler {
     public ProblemDetail manejarIntegridad(DataIntegrityViolationException ex, HttpServletRequest req) {
         log.warn("Violacion de integridad en {}: {}", req.getRequestURI(), ex.getMostSpecificCause().getMessage());
         return crearProblema(HttpStatus.CONFLICT, "CONFLICTO_INTEGRIDAD",
-                "Ya existe un registro con esos datos unicos o se viola una restriccion de integridad", req);
+                "Ya existe un registro con esos datos.", req);
     }
 
     @ExceptionHandler(Exception.class)

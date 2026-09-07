@@ -16,7 +16,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import pe.unir.tfm.srp.seguimiento.dto.request.CongelarLineaBaseRequest;
 import pe.unir.tfm.srp.seguimiento.dto.response.LineaBaseResponse;
-import pe.unir.tfm.srp.seguimiento.model.LineaBase;
 import pe.unir.tfm.srp.seguimiento.service.LineaBaseService;
 
 @RestController
@@ -27,7 +26,7 @@ public class LineaBaseController {
     private final LineaBaseService lineaBaseService;
 
     @GetMapping("/por-proyecto/{proyectoId}")
-    public ResponseEntity<List<LineaBase>> listarPorProyecto(@PathVariable UUID proyectoId) {
+    public ResponseEntity<List<LineaBaseResponse>> listarPorProyecto(@PathVariable UUID proyectoId) {
         return ResponseEntity.ok(lineaBaseService.listarPorProyecto(proyectoId));
     }
 

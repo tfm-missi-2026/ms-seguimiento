@@ -17,8 +17,8 @@ public record CongelarLineaBaseRequest(
         @NotNull UUID tareaId,
         @NotNull String nombre,
         String descripcion,
-        @NotNull LocalDate fechaInicioPlanificada,
-        @NotNull LocalDate fechaFinPlanificada,
+        LocalDate fechaInicioPlanificada,
+        LocalDate fechaFinPlanificada,
         @NotNull Short horasEstimadas
     ) {}
 

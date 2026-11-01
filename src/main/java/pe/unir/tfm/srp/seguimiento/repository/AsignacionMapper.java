@@ -21,7 +21,7 @@ public interface AsignacionMapper {
 
     List<Asignacion> listarPorTarea(@Param("tareaId") UUID tareaId);
 
-    int contar(@Param("tareaId") UUID tareaId, @Param("usuarioId") UUID usuarioId);
+    int contarPorTarea(@Param("tareaId") UUID tareaId);
 
     BigDecimal sumarHorasPlanificadasEnPeriodo(@Param("usuarioId") UUID usuarioId,
                                                @Param("desde") LocalDate desde,

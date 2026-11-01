@@ -33,9 +33,9 @@
         WHERE tarea_id = #{tareaId} AND estado = 1
     </select>
 
-    <select id="contar" resultType="int">
+    <select id="contarPorTarea" resultType="int">
         SELECT COUNT(*) FROM mss_asignacion
-         WHERE tarea_id = #{tareaId} AND usuario_id = #{usuarioId} AND estado = 1
+         WHERE tarea_id = #{tareaId} AND estado = 1
     </select>
 
     <!-- Carga ya comprometida del recurso cuyo periodo planificado solapa [desde, hasta] (RF-06) -->

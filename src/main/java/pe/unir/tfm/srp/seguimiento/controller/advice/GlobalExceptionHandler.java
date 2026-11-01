@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import pe.unir.tfm.srp.seguimiento.exception.ConflictoNegocioException;
@@ -77,6 +78,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConflictoNegocioException.class)
     public ProblemDetail manejarConflicto(ConflictoNegocioException ex, HttpServletRequest req) {
         return crearProblema(HttpStatus.CONFLICT, "CONFLICTO_NEGOCIO", ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(FeignException.class)
+    public ProblemDetail manejarServicioExterno(FeignException ex, HttpServletRequest req) {
+        log.error("Fallo la llamada a ms-proyectos desde {}", req.getRequestURI(), ex);
+        return crearProblema(HttpStatus.SERVICE_UNAVAILABLE, "SERVICIO_NO_DISPONIBLE",
+                "No se pudo completar la operacion con el servicio de proyectos", req);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

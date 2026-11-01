@@ -49,6 +49,17 @@
                 1, NOW(), #{usuarioCreacion})
     </insert>
 
+    <update id="completarFechasTarea">
+        UPDATE mss_lb_tarea
+           SET fecha_inicio_planificada = #{fechaInicio},
+               fecha_fin_planificada = #{fechaFin},
+               fecha_modificacion = NOW(),
+               usuario_modificacion = #{usuarioModificacion}
+         WHERE tarea_id = #{tareaId}
+           AND fecha_inicio_planificada IS NULL
+           AND estado = 1
+    </update>
+
     <select id="listarTareasPorLineaBase" parameterType="java.util.UUID" resultType="pe.unir.tfm.srp.seguimiento.model.LbTarea">
         SELECT id, linea_base_id, tarea_id, nombre, descripcion,
                fecha_inicio_planificada, fecha_fin_planificada, horas_estimadas,

@@ -9,7 +9,11 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import pe.unir.tfm.srp.seguimiento.client.ProyectosClient;
+import pe.unir.tfm.srp.seguimiento.client.TareaFechasRequest;
+import pe.unir.tfm.srp.seguimiento.client.TareaProyectoResponse;
 import pe.unir.tfm.srp.seguimiento.config.CurrentUserResolver;
 import pe.unir.tfm.srp.seguimiento.dto.conversor.AsignacionConversor;
 import pe.unir.tfm.srp.seguimiento.dto.request.AsignacionRequest;
@@ -19,6 +23,7 @@ import pe.unir.tfm.srp.seguimiento.exception.ConflictoNegocioException;
 import pe.unir.tfm.srp.seguimiento.exception.RecursoNoEncontradoException;
 import pe.unir.tfm.srp.seguimiento.model.Asignacion;
 import pe.unir.tfm.srp.seguimiento.repository.AsignacionMapper;
+import pe.unir.tfm.srp.seguimiento.repository.LineaBaseMapper;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +33,8 @@ public class AsignacionService {
     private static final int JORNADA_BASE_HORAS = 8;
 
     private final AsignacionMapper asignacionMapper;
+    private final LineaBaseMapper lineaBaseMapper;
+    private final ProyectosClient proyectosClient;
     private final AsignacionConversor asignacionConversor;
     private final CurrentUserResolver currentUserResolver;
 
@@ -53,46 +60,71 @@ public class AsignacionService {
 
     @Transactional
     public AsignacionResponse crear(AsignacionRequest request) {
-        if (asignacionMapper.contar(request.tareaId(), request.usuarioId()) > 0) {
-            throw new ConflictoNegocioException(
-                    "Ya existe una asignacion para tarea=" + request.tareaId() + " usuario=" + request.usuarioId());
+        if (asignacionMapper.contarPorTarea(request.tareaId()) > 0) {
+            throw new ConflictoNegocioException("La tarea ya esta asignada a un recurso");
         }
-        validarPeriodo(request);
-        validarCapacidad(request);
+        LocalDate inicio = request.fechaInicioPlanificada();
+        validarInicioHabil(inicio);
+        TareaProyectoResponse tarea = obtenerTarea(request.tareaId());
+        LocalDate fin = calcularFechaFin(inicio, tarea.diasEstimados());
+        BigDecimal horas = BigDecimal.valueOf(tarea.horasEstimadas());
+        validarCapacidad(request, horas, fin);
         Asignacion nueva = Asignacion.builder()
                 .id(UUID.randomUUID())
                 .tareaId(request.tareaId())
                 .usuarioId(request.usuarioId())
-                .horasPlanificadas(request.horasPlanificadas())
-                .fechaInicioPlanificada(request.fechaInicioPlanificada())
-                .fechaFinPlanificada(request.fechaFinPlanificada())
+                .horasPlanificadas(horas)
+                .fechaInicioPlanificada(inicio)
+                .fechaFinPlanificada(fin)
                 .build();
         asignacionMapper.insertar(nueva);
+        lineaBaseMapper.completarFechasTarea(request.tareaId(), inicio, fin,
+                currentUserResolver.obtenerUsuarioActualId());
+        proyectosClient.actualizarFechas(request.tareaId(), new TareaFechasRequest(inicio, fin));
         return asignacionConversor.aAsignacionResponse(nueva);
     }
 
-    private void validarPeriodo(AsignacionRequest request) {
-        if (request.fechaInicioPlanificada() != null && request.fechaFinPlanificada() != null
-                && request.fechaFinPlanificada().isBefore(request.fechaInicioPlanificada())) {
-            throw new ConflictoNegocioException(
-                    "fecha_fin_planificada debe ser posterior o igual a fecha_inicio_planificada");
+    private void validarInicioHabil(LocalDate inicio) {
+        if (!esDiaHabil(inicio)) {
+            throw new ConflictoNegocioException("La fecha de inicio debe ser un dia habil");
         }
+    }
+
+    private TareaProyectoResponse obtenerTarea(UUID tareaId) {
+        try {
+            return proyectosClient.obtenerTarea(tareaId);
+        } catch (FeignException.NotFound ex) {
+            throw new RecursoNoEncontradoException("Tarea " + tareaId + " no encontrada");
+        }
+    }
+
+    private LocalDate calcularFechaFin(LocalDate inicio, int dias) {
+        LocalDate fin = inicio;
+        int restantes = dias - 1;
+        while (restantes > 0) {
+            fin = fin.plusDays(1);
+            if (esDiaHabil(fin)) {
+                restantes--;
+            }
+        }
+        return fin;
+    }
+
+    private boolean esDiaHabil(LocalDate dia) {
+        DayOfWeek dow = dia.getDayOfWeek();
+        return dow != DayOfWeek.SATURDAY && dow != DayOfWeek.SUNDAY;
     }
 
     // RF-06: advierte si la carga del recurso en el periodo supera su capacidad (jornada base
     // x dias habiles). El alta solo procede si el solicitante confirma la sobrecarga.
-    private void validarCapacidad(AsignacionRequest request) {
-        if (request.confirmarSobrecarga()
-                || request.horasPlanificadas() == null
-                || request.fechaInicioPlanificada() == null
-                || request.fechaFinPlanificada() == null) {
+    private void validarCapacidad(AsignacionRequest request, BigDecimal horas, LocalDate fin) {
+        if (request.confirmarSobrecarga()) {
             return;
         }
-        BigDecimal capacidad = capacidadDelPeriodo(
-                request.fechaInicioPlanificada(), request.fechaFinPlanificada());
+        BigDecimal capacidad = capacidadDelPeriodo(request.fechaInicioPlanificada(), fin);
         BigDecimal cargaExistente = asignacionMapper.sumarHorasPlanificadasEnPeriodo(
-                request.usuarioId(), request.fechaInicioPlanificada(), request.fechaFinPlanificada());
-        BigDecimal cargaTotal = cargaExistente.add(request.horasPlanificadas());
+                request.usuarioId(), request.fechaInicioPlanificada(), fin);
+        BigDecimal cargaTotal = cargaExistente.add(horas);
         if (cargaTotal.compareTo(capacidad) > 0) {
             throw new ConflictoNegocioException(
                     "La asignacion deja al recurso en sobrecarga: " + cargaTotal + " h planificadas frente a "
@@ -103,8 +135,7 @@ public class AsignacionService {
     private BigDecimal capacidadDelPeriodo(LocalDate desde, LocalDate hasta) {
         long diasHabiles = 0;
         for (LocalDate dia = desde; !dia.isAfter(hasta); dia = dia.plusDays(1)) {
-            DayOfWeek dow = dia.getDayOfWeek();
-            if (dow != DayOfWeek.SATURDAY && dow != DayOfWeek.SUNDAY) {
+            if (esDiaHabil(dia)) {
                 diasHabiles++;
             }
         }

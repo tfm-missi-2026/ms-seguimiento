@@ -14,8 +14,10 @@ import pe.unir.tfm.srp.seguimiento.dto.request.EliminacionRequest;
 import pe.unir.tfm.srp.seguimiento.dto.request.VariacionCrearRequest;
 import pe.unir.tfm.srp.seguimiento.dto.request.VariacionResolverRequest;
 import pe.unir.tfm.srp.seguimiento.dto.response.VariacionResponse;
+import pe.unir.tfm.srp.seguimiento.exception.ConflictoNegocioException;
 import pe.unir.tfm.srp.seguimiento.exception.RecursoNoEncontradoException;
 import pe.unir.tfm.srp.seguimiento.model.Variacion;
+import pe.unir.tfm.srp.seguimiento.repository.LineaBaseMapper;
 import pe.unir.tfm.srp.seguimiento.repository.VariacionMapper;
 
 @Service
@@ -23,6 +25,7 @@ import pe.unir.tfm.srp.seguimiento.repository.VariacionMapper;
 public class VariacionService {
 
     private final VariacionMapper variacionMapper;
+    private final LineaBaseMapper lineaBaseMapper;
     private final VariacionConversor variacionConversor;
     private final CurrentUserResolver currentUserResolver;
 
@@ -44,6 +47,9 @@ public class VariacionService {
 
     @Transactional
     public VariacionResponse crear(VariacionCrearRequest request) {
+        if (lineaBaseMapper.contarTareaCongelada(request.tareaId()) == 0) {
+            throw new ConflictoNegocioException("La tarea no pertenece a una linea base congelada");
+        }
         Variacion nueva = Variacion.builder()
                 .id(UUID.randomUUID())
                 .tareaId(request.tareaId())
@@ -75,8 +81,12 @@ public class VariacionService {
 
     @Transactional
     public void eliminar(UUID id, EliminacionRequest request) {
-        if (variacionMapper.buscarPorId(id) == null) {
+        Variacion existente = variacionMapper.buscarPorId(id);
+        if (existente == null) {
             throw new RecursoNoEncontradoException("Variacion " + id + " no encontrada");
+        }
+        if (existente.getResueltoPor() != null) {
+            throw new ConflictoNegocioException("Solo se pueden eliminar variaciones pendientes");
         }
         variacionMapper.eliminarLogico(id, currentUserResolver.obtenerUsuarioActualId(), request.motivoEliminacion());
     }

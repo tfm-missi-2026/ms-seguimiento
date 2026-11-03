@@ -16,5 +16,7 @@ public class CargaAgregado {
     private UUID usuarioId;
     private BigDecimal horasPlanificadas;
     private BigDecimal horasRegistradas;
+    private BigDecimal horasTareas;
+    private BigDecimal horasActividades;
     private long numeroTareasActivas;
 }

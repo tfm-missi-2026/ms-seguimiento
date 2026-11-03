@@ -62,6 +62,8 @@ public class CargaService {
                 agregado.getUsuarioId(),
                 planificadas,
                 registradas,
+                agregado.getHorasTareas() != null ? agregado.getHorasTareas() : BigDecimal.ZERO,
+                agregado.getHorasActividades() != null ? agregado.getHorasActividades() : BigDecimal.ZERO,
                 agregado.getNumeroTareasActivas(),
                 porcentajeUtilizacion,
                 sobrecarga);

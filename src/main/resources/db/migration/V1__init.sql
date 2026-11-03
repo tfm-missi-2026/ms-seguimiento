@@ -246,8 +246,8 @@ CREATE TABLE mss_lb_tarea (
     tarea_id                 UUID         NOT NULL,
     nombre                   VARCHAR(200) NOT NULL,
     descripcion              TEXT,
-    fecha_inicio_planificada DATE,
-    fecha_fin_planificada    DATE,
+    fecha_inicio_planificada DATE         NOT NULL,
+    fecha_fin_planificada    DATE         NOT NULL,
     horas_estimadas          SMALLINT     NOT NULL,
     estado                   SMALLINT     NOT NULL DEFAULT 1 CHECK (estado IN (0, 1)),
     fecha_creacion           TIMESTAMP    NOT NULL,
@@ -268,8 +268,8 @@ COMMENT ON COLUMN mss_lb_tarea.linea_base_id IS 'FK a la linea base (intra-BD)';
 COMMENT ON COLUMN mss_lb_tarea.tarea_id IS 'UUID de la tarea original (cross-BD a msp_tarea)';
 COMMENT ON COLUMN mss_lb_tarea.nombre IS 'Nombre de la tarea al momento de congelar';
 COMMENT ON COLUMN mss_lb_tarea.descripcion IS 'Descripcion de la tarea al momento de congelar';
-COMMENT ON COLUMN mss_lb_tarea.fecha_inicio_planificada IS 'Fecha de inicio planificada; NULL si la tarea no estaba asignada al congelar, se completa al asignarla';
-COMMENT ON COLUMN mss_lb_tarea.fecha_fin_planificada IS 'Fecha de fin planificada; NULL si la tarea no estaba asignada al congelar, se completa al asignarla';
+COMMENT ON COLUMN mss_lb_tarea.fecha_inicio_planificada IS 'Fecha de inicio planificada al momento de congelar';
+COMMENT ON COLUMN mss_lb_tarea.fecha_fin_planificada IS 'Fecha de fin planificada al momento de congelar';
 COMMENT ON COLUMN mss_lb_tarea.horas_estimadas IS 'Horas estimadas al momento de congelar (jornada base = 8 horas)';
 COMMENT ON COLUMN mss_lb_tarea.estado IS 'Estado del registro (0=inactivo, 1=activo)';
 COMMENT ON COLUMN mss_lb_tarea.fecha_creacion IS 'Fecha y hora de creacion del registro';

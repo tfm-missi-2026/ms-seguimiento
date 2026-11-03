@@ -8,6 +8,5 @@ import jakarta.validation.constraints.NotNull;
 public record AsignacionRequest(
     @NotNull UUID tareaId,
     @NotNull UUID usuarioId,
-    @NotNull LocalDate fechaInicioPlanificada,
-    boolean confirmarSobrecarga
+    @NotNull LocalDate fechaInicioPlanificada
 ) {}

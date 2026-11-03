@@ -13,11 +13,15 @@
         SELECT a.usuario_id                          AS usuario_id,
                COALESCE(SUM(a.horas_planificadas), 0) AS horas_planificadas,
                COALESCE(reg.horas_registradas, 0)     AS horas_registradas,
+               COALESCE(reg.horas_tareas, 0)          AS horas_tareas,
+               COALESCE(reg.horas_actividades, 0)     AS horas_actividades,
                COUNT(*)                               AS numero_tareas_activas
           FROM mss_asignacion a
           LEFT JOIN (
                SELECT b.usuario_id,
-                      ROUND(SUM(EXTRACT(EPOCH FROM (b.hora_fin - b.hora_inicio)) / 3600.0)::numeric, 2) AS horas_registradas
+                      ROUND(SUM(EXTRACT(EPOCH FROM (b.hora_fin - b.hora_inicio)) / 3600.0)::numeric, 2) AS horas_registradas,
+                      ROUND((SUM(EXTRACT(EPOCH FROM (b.hora_fin - b.hora_inicio)) / 3600.0) FILTER (WHERE b.asignacion_id IS NOT NULL))::numeric, 2) AS horas_tareas,
+                      ROUND((SUM(EXTRACT(EPOCH FROM (b.hora_fin - b.hora_inicio)) / 3600.0) FILTER (WHERE b.actividad_id IS NOT NULL))::numeric, 2) AS horas_actividades
                  FROM mss_bitacora b
                  <if test="tareaIds != null and tareaIds.size() > 0">
                  JOIN mss_asignacion ab ON ab.id = b.asignacion_id
@@ -34,7 +38,7 @@
            <if test="tareaIds != null and tareaIds.size() > 0">
            AND a.tarea_id <include refid="inTareas"/>
            </if>
-         GROUP BY a.usuario_id, reg.horas_registradas
+         GROUP BY a.usuario_id, reg.horas_registradas, reg.horas_tareas, reg.horas_actividades
          ORDER BY a.usuario_id
     </select>
 
@@ -59,6 +63,27 @@
                        WHERE b.usuario_id = #{usuarioId} AND b.fecha BETWEEN #{desde} AND #{hasta}
                          AND b.estado = 1), 0)
                 AS horas_registradas,
+            COALESCE((SELECT ROUND(SUM(EXTRACT(EPOCH FROM (b.hora_fin - b.hora_inicio)) / 3600.0)::numeric, 2)
+                        FROM mss_bitacora b
+                        JOIN mss_asignacion ab ON ab.id = b.asignacion_id
+                             <if test="tareaIds != null and tareaIds.size() > 0">
+                             AND ab.tarea_id <include refid="inTareas"/>
+                             </if>
+                             AND ab.estado = 1
+                       WHERE b.usuario_id = #{usuarioId} AND b.fecha BETWEEN #{desde} AND #{hasta}
+                         AND b.estado = 1), 0)
+                AS horas_tareas,
+            <choose>
+                <when test="tareaIds != null and tareaIds.size() > 0">0</when>
+                <otherwise>
+                    COALESCE((SELECT ROUND(SUM(EXTRACT(EPOCH FROM (b.hora_fin - b.hora_inicio)) / 3600.0)::numeric, 2)
+                                FROM mss_bitacora b
+                               WHERE b.usuario_id = #{usuarioId} AND b.fecha BETWEEN #{desde} AND #{hasta}
+                                 AND b.actividad_id IS NOT NULL
+                                 AND b.estado = 1), 0)
+                </otherwise>
+            </choose>
+                AS horas_actividades,
             (SELECT COUNT(*)
                        FROM mss_asignacion a2
                       WHERE a2.usuario_id = #{usuarioId} AND a2.estado = 1

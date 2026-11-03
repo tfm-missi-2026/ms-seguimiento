@@ -14,6 +14,7 @@ import pe.unir.tfm.srp.seguimiento.dto.request.CongelarLineaBaseRequest;
 import pe.unir.tfm.srp.seguimiento.dto.response.LbAsignacionResponse;
 import pe.unir.tfm.srp.seguimiento.dto.response.LbTareaResponse;
 import pe.unir.tfm.srp.seguimiento.dto.response.LineaBaseResponse;
+import pe.unir.tfm.srp.seguimiento.exception.ConflictoNegocioException;
 import pe.unir.tfm.srp.seguimiento.exception.RecursoNoEncontradoException;
 import pe.unir.tfm.srp.seguimiento.model.LbAsignacion;
 import pe.unir.tfm.srp.seguimiento.model.LbTarea;
@@ -48,18 +49,15 @@ public class LineaBaseService {
 
     @Transactional
     public LineaBaseResponse congelar(CongelarLineaBaseRequest request) {
-        UUID actor = currentUserResolver.obtenerUsuarioActualId();
-        Short version = lineaBaseMapper.obtenerSiguienteVersion(request.proyectoId());
-
-        LineaBase cabecera = LineaBase.builder()
-                .id(UUID.randomUUID())
-                .proyectoId(request.proyectoId())
-                .version(version)
-                .descripcion(request.descripcion())
-                .fechaCongelacion(LocalDateTime.now())
-                .congeladaPor(actor)
-                .build();
-        lineaBaseMapper.insertarCabecera(cabecera);
+        if (request.tareas().isEmpty()) {
+            throw new ConflictoNegocioException("No hay tareas por congelar");
+        }
+        request.tareas().forEach(t -> {
+            if (lineaBaseMapper.contarTareaCongelada(t.tareaId()) > 0) {
+                throw new ConflictoNegocioException("La tarea ya esta congelada en la linea base");
+            }
+        });
+        LineaBase cabecera = cabeceraDelProyecto(request);
 
         request.tareas().forEach(t -> {
             LbTarea lb = LbTarea.builder()
@@ -87,5 +85,22 @@ public class LineaBaseService {
         });
 
         return buscarPorId(cabecera.getId());
+    }
+
+    private LineaBase cabeceraDelProyecto(CongelarLineaBaseRequest request) {
+        List<LineaBase> existentes = lineaBaseMapper.listarPorProyecto(request.proyectoId());
+        if (!existentes.isEmpty()) {
+            return existentes.get(0);
+        }
+        LineaBase cabecera = LineaBase.builder()
+                .id(UUID.randomUUID())
+                .proyectoId(request.proyectoId())
+                .version(lineaBaseMapper.obtenerSiguienteVersion(request.proyectoId()))
+                .descripcion(request.descripcion())
+                .fechaCongelacion(LocalDateTime.now())
+                .congeladaPor(currentUserResolver.obtenerUsuarioActualId())
+                .build();
+        lineaBaseMapper.insertarCabecera(cabecera);
+        return cabecera;
     }
 }

@@ -66,6 +66,10 @@ public class AvanceService {
         return new AvanceTareaResponse(
                 agregado.getTareaId(),
                 agregado.getNombre(),
+                agregado.getFechaInicioPlanificada(),
+                agregado.getFechaFinPlanificada(),
+                agregado.getPrimeraFechaRegistrada(),
+                agregado.getUltimaFechaRegistrada(),
                 estimadas,
                 registradas,
                 porcentaje(registradas, estimadas),

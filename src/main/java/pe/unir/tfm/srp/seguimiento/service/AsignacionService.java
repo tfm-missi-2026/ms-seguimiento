@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,9 +15,11 @@ import lombok.RequiredArgsConstructor;
 import pe.unir.tfm.srp.seguimiento.client.ProyectosClient;
 import pe.unir.tfm.srp.seguimiento.client.TareaFechasRequest;
 import pe.unir.tfm.srp.seguimiento.client.TareaProyectoResponse;
+import pe.unir.tfm.srp.seguimiento.client.TareaSituacionRequest;
 import pe.unir.tfm.srp.seguimiento.config.CurrentUserResolver;
 import pe.unir.tfm.srp.seguimiento.dto.conversor.AsignacionConversor;
 import pe.unir.tfm.srp.seguimiento.dto.request.AsignacionRequest;
+import pe.unir.tfm.srp.seguimiento.dto.request.AsignacionSituacionRequest;
 import pe.unir.tfm.srp.seguimiento.dto.request.EliminacionRequest;
 import pe.unir.tfm.srp.seguimiento.dto.response.AsignacionResponse;
 import pe.unir.tfm.srp.seguimiento.exception.ConflictoNegocioException;
@@ -78,8 +81,6 @@ public class AsignacionService {
                 .fechaFinPlanificada(fin)
                 .build();
         asignacionMapper.insertar(nueva);
-        lineaBaseMapper.completarFechasTarea(request.tareaId(), inicio, fin,
-                currentUserResolver.obtenerUsuarioActualId());
         proyectosClient.actualizarFechas(request.tareaId(), new TareaFechasRequest(inicio, fin));
         return asignacionConversor.aAsignacionResponse(nueva);
     }
@@ -116,11 +117,8 @@ public class AsignacionService {
     }
 
     // RF-06: advierte si la carga del recurso en el periodo supera su capacidad (jornada base
-    // x dias habiles). El alta solo procede si el solicitante confirma la sobrecarga.
+    // x dias habiles).
     private void validarCapacidad(AsignacionRequest request, BigDecimal horas, LocalDate fin) {
-        if (request.confirmarSobrecarga()) {
-            return;
-        }
         BigDecimal capacidad = capacidadDelPeriodo(request.fechaInicioPlanificada(), fin);
         BigDecimal cargaExistente = asignacionMapper.sumarHorasPlanificadasEnPeriodo(
                 request.usuarioId(), request.fechaInicioPlanificada(), fin);
@@ -128,7 +126,7 @@ public class AsignacionService {
         if (cargaTotal.compareTo(capacidad) > 0) {
             throw new ConflictoNegocioException(
                     "La asignacion deja al recurso en sobrecarga: " + cargaTotal + " h planificadas frente a "
-                            + capacidad + " h de capacidad en el periodo. Reenvie con confirmarSobrecarga=true para continuar");
+                            + capacidad + " h de capacidad en el periodo");
         }
     }
 
@@ -142,10 +140,25 @@ public class AsignacionService {
         return BigDecimal.valueOf(diasHabiles * JORNADA_BASE_HORAS);
     }
 
+    public void actualizarSituacion(UUID id, AsignacionSituacionRequest request) {
+        Asignacion asignacion = asignacionMapper.buscarPorId(id);
+        if (asignacion == null) {
+            throw new RecursoNoEncontradoException("Asignacion " + id + " no encontrada");
+        }
+        if (!asignacion.getUsuarioId().equals(currentUserResolver.obtenerUsuarioActualId())) {
+            throw new AccessDeniedException("Solo el recurso asignado puede cambiar la situacion de la tarea");
+        }
+        proyectosClient.actualizarSituacion(asignacion.getTareaId(), new TareaSituacionRequest(request.situacionId()));
+    }
+
     @Transactional
     public void eliminar(UUID id, EliminacionRequest request) {
-        if (asignacionMapper.buscarPorId(id) == null) {
+        Asignacion asignacion = asignacionMapper.buscarPorId(id);
+        if (asignacion == null) {
             throw new RecursoNoEncontradoException("Asignacion " + id + " no encontrada");
+        }
+        if (lineaBaseMapper.contarTareaCongelada(asignacion.getTareaId()) > 0) {
+            throw new ConflictoNegocioException("La asignacion pertenece a una linea base congelada");
         }
         asignacionMapper.eliminarLogico(id, currentUserResolver.obtenerUsuarioActualId(), request.motivoEliminacion());
     }

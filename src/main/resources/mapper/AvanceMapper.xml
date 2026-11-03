@@ -7,12 +7,18 @@
     <select id="avancePorLineaBase" resultType="pe.unir.tfm.srp.seguimiento.model.AvanceTareaAgregado">
         SELECT lt.tarea_id                       AS tarea_id,
                lt.nombre                          AS nombre,
+               lt.fecha_inicio_planificada        AS fecha_inicio_planificada,
+               lt.fecha_fin_planificada           AS fecha_fin_planificada,
+               reg.primera_fecha                  AS primera_fecha_registrada,
+               reg.ultima_fecha                   AS ultima_fecha_registrada,
                lt.horas_estimadas                 AS horas_estimadas,
                COALESCE(reg.horas_registradas, 0) AS horas_registradas
           FROM mss_lb_tarea lt
           LEFT JOIN (
                SELECT a.tarea_id,
-                      ROUND(SUM(EXTRACT(EPOCH FROM (b.hora_fin - b.hora_inicio)) / 3600.0)::numeric, 2) AS horas_registradas
+                      ROUND(SUM(EXTRACT(EPOCH FROM (b.hora_fin - b.hora_inicio)) / 3600.0)::numeric, 2) AS horas_registradas,
+                      MIN(b.fecha) AS primera_fecha,
+                      MAX(b.fecha) AS ultima_fecha
                  FROM mss_bitacora b
                  JOIN mss_asignacion a ON a.id = b.asignacion_id AND a.estado = 1
                 WHERE b.estado = 1

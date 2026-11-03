@@ -16,4 +16,7 @@ public interface ProyectosClient {
 
     @PutMapping("/api/tareas/{id}/fechas")
     void actualizarFechas(@PathVariable("id") UUID id, @RequestBody TareaFechasRequest request);
+
+    @PutMapping("/api/tareas/{id}/situacion")
+    void actualizarSituacion(@PathVariable("id") UUID id, @RequestBody TareaSituacionRequest request);
 }

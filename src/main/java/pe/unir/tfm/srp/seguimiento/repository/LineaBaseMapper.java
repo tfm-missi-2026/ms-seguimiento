@@ -1,6 +1,5 @@
 package pe.unir.tfm.srp.seguimiento.repository;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,10 +25,7 @@ public interface LineaBaseMapper {
 
     void insertarAsignacion(LbAsignacion lbAsignacion);
 
-    void completarFechasTarea(@Param("tareaId") UUID tareaId,
-                              @Param("fechaInicio") LocalDate fechaInicio,
-                              @Param("fechaFin") LocalDate fechaFin,
-                              @Param("usuarioModificacion") UUID usuarioModificacion);
+    int contarTareaCongelada(@Param("tareaId") UUID tareaId);
 
     List<LbTarea> listarTareasPorLineaBase(@Param("lineaBaseId") UUID lineaBaseId);
 
